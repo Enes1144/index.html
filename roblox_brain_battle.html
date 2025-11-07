@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Roblox Brain Battle – Made by Enes</title>
+<style>
+body { font-family:'Arial',sans-serif; background:linear-gradient(to right,#8ec5fc,#e0c3fc); text-align:center; margin:0; padding:0; }
+.banner { font-size:60px; font-weight:bold; background:linear-gradient(45deg,#ff512f,#dd2476); -webkit-background-clip:text; color:transparent; text-shadow:3px 3px 10px rgba(0,0,0,0.3); margin-top:20px; animation:glow 2s infinite alternate; }
+@keyframes glow {0% { text-shadow:3px 3px 10px rgba(0,0,0,0.3),0 0 10px #ff512f;} 100% { text-shadow:3px 3px 15px rgba(0,0,0,0.5),0 0 20px #dd2476;}}
+#quiz-container { display:none; margin:40px auto; padding:20px; max-width:700px; background:rgba(255,255,255,0.9); border-radius:20px; box-shadow:0 0 15px rgba(0,0,0,0.3);}
+#question { font-size:26px; margin-bottom:25px; }
+.answer-btn { display:block; width:80%; padding:14px; margin:10px auto; font-size:22px; border-radius:15px; border:none; cursor:pointer; transition:all 0.3s; background-color:#3498db; color:white; font-weight:bold; }
+.answer-btn:hover { background-color:#2980b9; }
+#score { font-size:22px; margin-top:10px; color:#333; }
+#end-screen { display:none; }
+#start-btn, #share-btn, #next-btn { padding:14px 28px; font-size:22px; border-radius:12px; border:none; cursor:pointer; margin:10px; background-color:#2ecc71; color:white; font-weight:bold; transition:0.3s; }
+#start-btn:hover, #share-btn:hover, #next-btn:hover { background-color:#27ae60; }
+</style>
+</head>
+<body>
+
+<div class="banner">Roblox Brain Battle – Made by Enes</div>
+
+<button id="start-btn">Quiz starten</button>
+
+<div id="quiz-container">
+  <div id="question">Frage wird geladen...</div>
+  <button class="answer-btn" id="btn0">Antwort 1</button>
+  <button class="answer-btn" id="btn1">Antwort 2</button>
+  <button class="answer-btn" id="btn2">Antwort 3</button>
+  <button class="answer-btn" id="btn3">Antwort 4</button>
+  <div id="score">Punkte: 0</div>
+</div>
+
+<div id="end-screen">
+  <h2>Quiz beendet!</h2>
+  <p>Du hast <span id="finalScore">0</span> Punkte erreicht!</p>
+  <button id="next-btn">Nochmal spielen</button>
+  <button id="share-btn">Teilen</button>
+</div>
+
+<!-- Sounds -->
+<audio id="correct-sound" src="https://freesound.org/data/previews/256/256113_3263906-lq.mp3"></audio>
+<audio id="wrong-sound" src="https://freesound.org/data/previews/331/331912_3248244-lq.mp3"></audio>
+
+<script>
+document.addEventListener("DOMContentLoaded", function(){
+
+const correctSound = document.getElementById("correct-sound");
+const wrongSound = document.getElementById("wrong-sound");
+
+const questions = [
+  {q:"Wann ist Roblox entstanden?", answers:["2006","2010","2004","2008"], correct:0},
+  {q:"Wer hat Roblox erfunden?", answers:["David Baszucki","Mark Zuckerberg","Elon Musk","Steve Jobs"], correct:0},
+  {q:"Wie heißt die Währung in Roblox?", answers:["Robux","Coins","Bits","Gems"], correct:0},
+  {q:"Kosten Roblox Spiele Geld?", answers:["Nein","Ja","Nur manche","Nur auf Handy"], correct:0},
+  {q:"Kosten Robux Geld?", answers:["Ja","Nein","Nur bei Events","Nur im Spielverlauf"], correct:0},
+  {q:"Was ist Voicechat?", answers:["Sprachchat","Textchat","Emojis","Musik"], correct:0},
+  {q:"Was ist das bekannteste Roblox-Spiel?", answers:["Adopt Me","Jailbreak","MeepCity","Brookhaven"], correct:0},
+  {q:"Kann man selbst Spiele herstellen?", answers:["Ja","Nein","Nur Admins","Nur Profis"], correct:0},
+  {q:"Kann man Kleidung für den Avatar kaufen?", answers:["Ja","Nein","Nur Freunde","Nur Events"], correct:0},
+  {q:"Gibt es Events in Roblox?", answers:["Ja","Nein","Nur Weihnachten","Nur Sommer"], correct:0}
+];
+
+let currentQuestion = 0;
+let score = 0;
+
+const startBtn = document.getElementById("start-btn");
+const quizContainer = document.getElementById("quiz-container");
+const questionEl = document.getElementById("question");
+const answerBtns = [0,1,2,3].map(i=>document.getElementById("btn"+i));
+const scoreEl = document.getElementById("score");
+const endScreen = document.getElementById("end-screen");
+const finalScore = document.getElementById("finalScore");
+const nextBtn = document.getElementById("next-btn");
+const shareBtn = document.getElementById("share-btn");
+
+startBtn.addEventListener("click", startQuiz);
+nextBtn.addEventListener("click", restartQuiz);
+shareBtn.addEventListener("click", shareQuiz);
+answerBtns.forEach((btn,i)=>btn.addEventListener("click",()=>checkAnswer(i)));
+
+function startQuiz(){
+  startBtn.style.display="none";
+  quizContainer.style.display="block";
+  loadQuestion();
+}
+
+function loadQuestion(){
+  questionEl.innerText = questions[currentQuestion].q;
+  answerBtns.forEach((btn,i)=>{
+    btn.innerText = questions[currentQuestion].answers[i];
+    btn.disabled = false;
+    btn.style.backgroundColor = "#3498db";
+  });
+}
+
+function checkAnswer(index){
+  const correct = questions[currentQuestion].correct;
+  if(index===correct){
+    score += 10;
+    correctSound.currentTime = 0; correctSound.play();
+    answerBtns[index].style.backgroundColor = "#2ecc71";
+  } else {
+    wrongSound.currentTime = 0; wrongSound.play();
+    answerBtns[index].style.backgroundColor = "#e74c3c";
+    answerBtns[correct].style.backgroundColor = "#2ecc71";
+  }
+  answerBtns.forEach(btn=>btn.disabled=true);
+  scoreEl.innerText = "Punkte: " + score;
+
+  setTimeout(()=>{
+    currentQuestion++;
+    if(currentQuestion<questions.length){
+      loadQuestion();
+    } else {
+      endQuiz();
+    }
+  },1000);
+}
+
+function endQuiz(){
+  quizContainer.style.display="none";
+  endScreen.style.display="block";
+  finalScore.innerText = score;
+}
+
+function restartQuiz(){
+  currentQuestion=0;
+  score=0;
+  quizContainer.style.display="block";
+  endScreen.style.display="none";
+  scoreEl.innerText="Punkte: 0";
+  loadQuestion();
+}
+
+function shareQuiz(){
+  const shareText=`Ich habe ${score} Punkte beim Roblox Brain Battle erreicht! Probier es aus: `;
+  navigator.clipboard.writeText(shareText);
+  alert("Text kopiert! Teile ihn mit deinen Freunden.");
+}
+
+});
+</script>
+
+</body>
+</html>
