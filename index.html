@@ -1,147 +1,220 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="de">
 <head>
-<meta charset="UTF-8">
-<title>Roblox Brain Battle – Made by Enes</title>
-<style>
-body { font-family:'Arial',sans-serif; background:linear-gradient(to right,#8ec5fc,#e0c3fc); text-align:center; margin:0; padding:0; }
-.banner { font-size:60px; font-weight:bold; background:linear-gradient(45deg,#ff512f,#dd2476); -webkit-background-clip:text; color:transparent; text-shadow:3px 3px 10px rgba(0,0,0,0.3); margin-top:20px; animation:glow 2s infinite alternate; }
-@keyframes glow {0% { text-shadow:3px 3px 10px rgba(0,0,0,0.3),0 0 10px #ff512f;} 100% { text-shadow:3px 3px 15px rgba(0,0,0,0.5),0 0 20px #dd2476;}}
-#quiz-container { display:none; margin:40px auto; padding:20px; max-width:700px; background:rgba(255,255,255,0.9); border-radius:20px; box-shadow:0 0 15px rgba(0,0,0,0.3);}
-#question { font-size:26px; margin-bottom:25px; }
-.answer-btn { display:block; width:80%; padding:14px; margin:10px auto; font-size:22px; border-radius:15px; border:none; cursor:pointer; transition:all 0.3s; background-color:#3498db; color:white; font-weight:bold; }
-.answer-btn:hover { background-color:#2980b9; }
-#score { font-size:22px; margin-top:10px; color:#333; }
-#end-screen { display:none; }
-#start-btn, #share-btn, #next-btn { padding:14px 28px; font-size:22px; border-radius:12px; border:none; cursor:pointer; margin:10px; background-color:#2ecc71; color:white; font-weight:bold; transition:0.3s; }
-#start-btn:hover, #share-btn:hover, #next-btn:hover { background-color:#27ae60; }
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SpongeBob Quiz — Made by enes</title>
+  <style>
+    :root{--bg:#f0f8ff;--card:#ffffff;--accent:#ffcc00;--muted:#6b7280}
+    *{box-sizing:border-box;font-family:Segoe UI,Roboto,Arial,Helvetica,sans-serif}
+    body{margin:0;background:linear-gradient(180deg,#aee7ff 0%, #f0f8ff 100%);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+    .card{width:100%;max-width:760px;background:var(--card);border-radius:12px;padding:20px;box-shadow:0 10px 30px rgba(2,6,23,0.12)}
+    header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    h1{margin:0;font-size:20px;display:flex;align-items:center;gap:10px}
+    .made{font-size:13px;color:var(--muted)}
+    .question{margin-top:18px;font-size:18px;font-weight:600}
+    .choices{margin-top:12px;display:flex;flex-direction:column;gap:8px}
+    label.choice{display:flex;align-items:center;gap:10px;padding:10px;border-radius:8px;border:1px solid rgba(16,24,40,0.04);cursor:pointer}
+    input[type=radio]{accent-color:var(--accent)}
+    .controls{display:flex;gap:10px;margin-top:14px}
+    button{padding:10px 14px;border-radius:10px;border:none;background:#1e40af;color:white;font-weight:600;cursor:pointer}
+    button.ghost{background:transparent;border:1px solid rgba(16,24,40,0.06);color:var(--muted)}
+    .meta{display:flex;gap:12px;align-items:center;margin-top:12px;color:var(--muted)}
+    .result{margin-top:14px;font-weight:700}
+    footer{margin-top:18px;text-align:right;color:var(--muted);font-size:13px}
+    @media (max-width:560px){.controls{flex-direction:column}} 
+  </style>
 </head>
 <body>
+  <main class="card" role="main" aria-labelledby="title">
+    <header>
+      <h1 id="title">SpongeBob Quiz <span aria-hidden="true">🧽</span></h1>
+      <div class="made">Made by enes</div>
+    </header>
 
-<div class="banner">Roblox Brain Battle – Made by Enes</div>
+    <p class="lead">Teste dein Wissen über SpongeBob und seine Freunde! Für richtige und falsche Antworten gibt es kurze Sounds.</p>
 
-<button id="start-btn">Quiz starten</button>
+    <div id="quiz">
+      <!-- Question area -->
+      <div id="qbox">
+        <div class="question" id="question">Frage wird geladen...</div>
+        <div class="choices" id="choices"></div>
+      </div>
 
-<div id="quiz-container">
-  <div id="question">Frage wird geladen...</div>
-  <button class="answer-btn" id="btn0">Antwort 1</button>
-  <button class="answer-btn" id="btn1">Antwort 2</button>
-  <button class="answer-btn" id="btn2">Antwort 3</button>
-  <button class="answer-btn" id="btn3">Antwort 4</button>
-  <div id="score">Punkte: 0</div>
-</div>
+      <div class="controls">
+        <button id="check">Antwort prüfen</button>
+        <button id="next" class="ghost">Nächste Frage</button>
+        <button id="restart" class="ghost">Neu starten</button>
+      </div>
 
-<div id="end-screen">
-  <h2>Quiz beendet!</h2>
-  <p>Du hast <span id="finalScore">0</span> Punkte erreicht!</p>
-  <button id="next-btn">Nochmal spielen</button>
-  <button id="share-btn">Teilen</button>
-</div>
+      <div class="meta">
+        <div>Frage: <strong id="qindex">0</strong>/<strong id="qtotal">0</strong></div>
+        <div>Punkte: <strong id="score">0</strong></div>
+      </div>
 
-<!-- Sounds -->
-<audio id="correct-sound" src="https://freesound.org/data/previews/256/256113_3263906-lq.mp3"></audio>
-<audio id="wrong-sound" src="https://freesound.org/data/previews/331/331912_3248244-lq.mp3"></audio>
+      <div class="result" id="message" aria-live="polite"></div>
+    </div>
 
-<script>
-document.addEventListener("DOMContentLoaded", function(){
+    <footer>Viel Spaß! — Made by enes</footer>
+  </main>
 
-const correctSound = document.getElementById("correct-sound");
-const wrongSound = document.getElementById("wrong-sound");
+  <script>
+    // Fragen-Set (Beispielfragen)
+    const QUESTIONS = [
+      {
+        q: 'Wie heißt SpongeBobs beste Freundin (sehr nervig, aber nett)?',
+        choices: ['Patrick Star', 'Sandy Cheeks', 'Mr. Krabs', 'Thaddäus'],
+        a: 0
+      },
+      {
+        q: 'Welche Farbe hat SpongeBobs Hose?',
+        choices: ['Grün', 'Blau', 'Braun', 'Lila'],
+        a: 2
+      },
+      {
+        q: 'Wie heißt die Stadt, in der SpongeBob wohnt?',
+        choices: ['Bikini Bottom', 'Coral Cove', 'Shell City', 'Ocean Town'],
+        a: 0
+      },
+      {
+        q: 'Wer betreibt die Krossen Krabbe?',
+        choices: ['SpongeBob', 'Mr. Krabs', 'Plankton', 'Thaddäus'],
+        a: 1
+      },
+      {
+        q: 'Womit ist Sandy Cheeks besonders bekannt?',
+        choices: ['Als Meerjungfrau', 'Als Wissenschaftlerin/Erfinderin', 'Als Sängerin', 'Als Köchin'],
+        a: 1
+      }
+    ]
 
-const questions = [
-  {q:"Wann ist Roblox entstanden?", answers:["2006","2010","2004","2008"], correct:0},
-  {q:"Wer hat Roblox erfunden?", answers:["David Baszucki","Mark Zuckerberg","Elon Musk","Steve Jobs"], correct:0},
-  {q:"Wie heißt die Währung in Roblox?", answers:["Robux","Coins","Bits","Gems"], correct:0},
-  {q:"Kosten Roblox Spiele Geld?", answers:["Nein","Ja","Nur manche","Nur auf Handy"], correct:0},
-  {q:"Kosten Robux Geld?", answers:["Ja","Nein","Nur bei Events","Nur im Spielverlauf"], correct:0},
-  {q:"Was ist Voicechat?", answers:["Sprachchat","Textchat","Emojis","Musik"], correct:0},
-  {q:"Was ist das bekannteste Roblox-Spiel?", answers:["Adopt Me","Jailbreak","MeepCity","Brookhaven"], correct:0},
-  {q:"Kann man selbst Spiele herstellen?", answers:["Ja","Nein","Nur Admins","Nur Profis"], correct:0},
-  {q:"Kann man Kleidung für den Avatar kaufen?", answers:["Ja","Nein","Nur Freunde","Nur Events"], correct:0},
-  {q:"Gibt es Events in Roblox?", answers:["Ja","Nein","Nur Weihnachten","Nur Sommer"], correct:0}
-];
+    // Spielzustand
+    let index = 0
+    let score = 0
+    let selected = null
+    const total = QUESTIONS.length
 
-let currentQuestion = 0;
-let score = 0;
+    // Elemente
+    const $question = document.getElementById('question')
+    const $choices = document.getElementById('choices')
+    const $check = document.getElementById('check')
+    const $next = document.getElementById('next')
+    const $restart = document.getElementById('restart')
+    const $message = document.getElementById('message')
+    const $qindex = document.getElementById('qindex')
+    const $qtotal = document.getElementById('qtotal')
+    const $score = document.getElementById('score')
 
-const startBtn = document.getElementById("start-btn");
-const quizContainer = document.getElementById("quiz-container");
-const questionEl = document.getElementById("question");
-const answerBtns = [0,1,2,3].map(i=>document.getElementById("btn"+i));
-const scoreEl = document.getElementById("score");
-const endScreen = document.getElementById("end-screen");
-const finalScore = document.getElementById("finalScore");
-const nextBtn = document.getElementById("next-btn");
-const shareBtn = document.getElementById("share-btn");
+    $qtotal.textContent = total
 
-startBtn.addEventListener("click", startQuiz);
-nextBtn.addEventListener("click", restartQuiz);
-shareBtn.addEventListener("click", shareQuiz);
-answerBtns.forEach((btn,i)=>btn.addEventListener("click",()=>checkAnswer(i)));
+    // WebAudio setup for dynamic sounds (no external files)
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)()
 
-function startQuiz(){
-  startBtn.style.display="none";
-  quizContainer.style.display="block";
-  loadQuestion();
-}
-
-function loadQuestion(){
-  questionEl.innerText = questions[currentQuestion].q;
-  answerBtns.forEach((btn,i)=>{
-    btn.innerText = questions[currentQuestion].answers[i];
-    btn.disabled = false;
-    btn.style.backgroundColor = "#3498db";
-  });
-}
-
-function checkAnswer(index){
-  const correct = questions[currentQuestion].correct;
-  if(index===correct){
-    score += 10;
-    correctSound.currentTime = 0; correctSound.play();
-    answerBtns[index].style.backgroundColor = "#2ecc71";
-  } else {
-    wrongSound.currentTime = 0; wrongSound.play();
-    answerBtns[index].style.backgroundColor = "#e74c3c";
-    answerBtns[correct].style.backgroundColor = "#2ecc71";
-  }
-  answerBtns.forEach(btn=>btn.disabled=true);
-  scoreEl.innerText = "Punkte: " + score;
-
-  setTimeout(()=>{
-    currentQuestion++;
-    if(currentQuestion<questions.length){
-      loadQuestion();
-    } else {
-      endQuiz();
+    function playCorrect(){
+      // short ascending melody
+      const now = audioCtx.currentTime
+      const freqs = [600, 900, 1200]
+      freqs.forEach((f,i)=>{
+        const o = audioCtx.createOscillator()
+        const g = audioCtx.createGain()
+        o.type = 'sine'
+        o.frequency.value = f
+        g.gain.value = 0.0001
+        o.connect(g)
+        g.connect(audioCtx.destination)
+        g.gain.setValueAtTime(0.0001, now + i*0.06)
+        g.gain.exponentialRampToValueAtTime(0.15, now + i*0.06 + 0.02)
+        g.gain.exponentialRampToValueAtTime(0.0001, now + i*0.06 + 0.18)
+        o.start(now + i*0.06)
+        o.stop(now + i*0.06 + 0.18)
+      })
     }
-  },1000);
-}
 
-function endQuiz(){
-  quizContainer.style.display="none";
-  endScreen.style.display="block";
-  finalScore.innerText = score;
-}
+    function playWrong(){
+      // short buzz / low tone
+      const now = audioCtx.currentTime
+      const o = audioCtx.createOscillator()
+      const g = audioCtx.createGain()
+      o.type = 'sawtooth'
+      o.frequency.value = 160
+      g.gain.value = 0.0001
+      o.connect(g)
+      g.connect(audioCtx.destination)
+      g.gain.setValueAtTime(0.0001, now)
+      g.gain.exponentialRampToValueAtTime(0.12, now + 0.02)
+      g.gain.exponentialRampToValueAtTime(0.0001, now + 0.28)
+      o.start(now)
+      o.stop(now + 0.28)
+    }
 
-function restartQuiz(){
-  currentQuestion=0;
-  score=0;
-  quizContainer.style.display="block";
-  endScreen.style.display="none";
-  scoreEl.innerText="Punkte: 0";
-  loadQuestion();
-}
+    function renderQuestion(){
+      const Q = QUESTIONS[index]
+      $question.textContent = Q.q
+      $choices.innerHTML = ''
+      selected = null
+      Q.choices.forEach((c,i) => {
+        const id = `c_${i}`
+        const label = document.createElement('label')
+        label.className = 'choice'
+        label.htmlFor = id
+        label.innerHTML = `<input type="radio" name="choice" id="${id}" value="${i}" /> <span>${c}</span>`
+        $choices.appendChild(label)
+      })
+      $qindex.textContent = index+1
+      $message.textContent = ''
+      $score.textContent = score
+    }
 
-function shareQuiz(){
-  const shareText=`Ich habe ${score} Punkte beim Roblox Brain Battle erreicht! Probier es aus: `;
-  navigator.clipboard.writeText(shareText);
-  alert("Text kopiert! Teile ihn mit deinen Freunden.");
-}
+    // Event delegation for choice selection
+    $choices.addEventListener('change', (e) => {
+      if(e.target && e.target.name === 'choice'){
+        selected = Number(e.target.value)
+      }
+    })
 
-});
-</script>
+    $check.addEventListener('click', () => {
+      // resume audio context on user gesture if needed
+      if(audioCtx.state === 'suspended') audioCtx.resume()
 
+      if(selected === null){
+        $message.textContent = 'Bitte wähle zuerst eine Antwort.'
+        return
+      }
+      const correct = QUESTIONS[index].a
+      if(selected === correct){
+        score += 1
+        $message.textContent = 'Richtig! 🎉' 
+        playCorrect()
+      } else {
+        $message.textContent = `Falsch. Richtige Antwort: ${QUESTIONS[index].choices[correct]}`
+        playWrong()
+      }
+      $score.textContent = score
+      // disable choices after checking
+      const inputs = $choices.querySelectorAll('input')
+      inputs.forEach(i => i.disabled = true)
+    })
+
+    $next.addEventListener('click', () => {
+      index += 1
+      if(index >= total){
+        $message.textContent = `Quiz beendet! Du hast ${score} von ${total} Punkten.`
+        // show restart suggestion
+        index = 0
+        score = 0
+      }
+      renderQuestion()
+    })
+
+    $restart.addEventListener('click', () => {
+      index = 0
+      score = 0
+      renderQuestion()
+    })
+
+    // initial render
+    renderQuestion()
+
+  </script>
 </body>
 </html>
